@@ -7,22 +7,22 @@ int compare(const void *a, const void *b) { return *(int8_t *)a - *(int8_t *)b; 
 
 static const char *weather_code_description(int8_t code) {
   if (code <= 1)
-    return "clear";
+    return "Sonne";
   if (code <= 3)
-    return "cloudy";
+    return "Wolken";
   if (code <= 48)
-    return "foggy";
+    return "Nebel";
   if (code <= 57)
-    return "drizzle";
+    return "Nieselregen";
   if (code <= 67)
-    return "rainy";
+    return "Regen";
   if (code <= 77)
-    return "snowy";
+    return "Schnee";
   if (code <= 82)
-    return "showers";
+    return "Schauer";
   if (code <= 86)
-    return "snowy";
-  return "stormy";
+    return "Schnee";
+  return "Gewitter";
 }
 
 void draw_weather_summary(GRect rect, const char *label, int8_t weather_code, int8_t temp_max, GFont font,
@@ -76,7 +76,7 @@ static void draw_weather_icon(GContext *ctx, int cx, int cy, int8_t code, int8_t
   }
 }
 
-static void draw_arrow_up(GContext *ctx, GRect rect) {
+void draw_arrow_up(GContext *ctx, GRect rect) {
   static GPoint top;
   static GPoint bottom;
   static GPoint left;
@@ -90,7 +90,7 @@ static void draw_arrow_up(GContext *ctx, GRect rect) {
   graphics_draw_line(ctx, top, right);
 }
 
-static void draw_arrow_down(GContext *ctx, GRect rect) {
+void draw_arrow_down(GContext *ctx, GRect rect) {
   static GPoint top;
   static GPoint bottom;
   static GPoint left;

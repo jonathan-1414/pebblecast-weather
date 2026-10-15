@@ -12,6 +12,8 @@ typedef struct {
   WeatherData weather_data;
   int8_t tomorrow_temp_max;
   int8_t tomorrow_weather_code;
+  const char *sun_time;
+  int sun_is_rise;
 } WatchfaceDrawContext;
 
 bool watchface_is_compact_bounds(GRect bounds);
@@ -21,3 +23,4 @@ void watchface_draw_time(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont
                          GTextAlignment alignment, GContext *ctx);
 void watchface_draw_bt_strike_through(GRect rect, GContext *ctx);
 void watchface_draw_weather_section(GRect weather_rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx);
+void watchface_draw_sun_event(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont font, GContext *ctx);

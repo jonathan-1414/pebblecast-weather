@@ -40,9 +40,25 @@ function getCityName(latitude, longitude) {
     });
 }
 
+function nextSunEvent(daily) {
+    var now = new Date();
+    var events = [
+        { time: daily.sunrise[0], rise: 1 },
+        { time: daily.sunset[0],  rise: 0 },
+        { time: daily.sunrise[1], rise: 1 },
+        { time: daily.sunset[1],  rise: 0 }
+    ];
+    for (var i = 0; i < events.length; i++) {
+        if (now < new Date(events[i].time)) {
+            return events[i];
+        }
+    }
+    return events[events.length - 1];
+}
+
 function getWeatherData(latitude, longitude) {
     var url = `https://api.open-meteo.com/v1/forecast` +
-        `?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weather_code&forecast_hours=13&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=2&temperature_unit=${getTemperatureUnit()}&timezone=auto`;
+        `?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weather_code&forecast_hours=13&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&forecast_days=2&temperature_unit=${getTemperatureUnit()}&timezone=auto`;
 
     return xhrRequest(url, 'GET').then(function (responseText) {
         return JSON.parse(responseText);
@@ -70,6 +86,7 @@ function locationSuccess(position) {
         var weather_code_bytes = new Int8Array(weatherJson.hourly.weather_code);
         var today_temp_max = Math.round(weatherJson.daily.temperature_2m_max[0]);
         var today_temp_min = Math.round(weatherJson.daily.temperature_2m_min[0]);
+        var sun_event = nextSunEvent(weatherJson.daily);
         var tomorrow_temp_max = Math.round(weatherJson.daily.temperature_2m_max[1]);
         var tomorrow_weather_code = weatherJson.daily.weather_code[1];
         Pebble.sendAppMessage({
@@ -81,7 +98,10 @@ function locationSuccess(position) {
             'TODAY_TEMP_MIN': today_temp_min,
             'TOMORROW_TEMP_MAX': tomorrow_temp_max,
             'TOMORROW_WEATHER_CODE': tomorrow_weather_code,
-            'CITY_NAME': cityName.substring(0, 31)
+            'CITY_NAME': cityName.substring(0, 31),
+            'SUN_TIME': sun_event.time.substring(11, 16),
+            'SUN_IS_RISE': sun_event.rise
+
         });
     }).catch(function () {
         console.log('Error requesting weather!');

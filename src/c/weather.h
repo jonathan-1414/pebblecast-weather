@@ -18,3 +18,5 @@ typedef struct {
 void draw_weather(GRect rect, WeatherData data, GFont font, GContext *ctx);
 void draw_weather_summary(GRect rect, const char *label, int8_t weather_code, int8_t temp_max, GFont font,
                           GContext *ctx);
+void draw_arrow_up(GContext *ctx, GRect rect);
+void draw_arrow_down(GContext *ctx, GRect rect);
