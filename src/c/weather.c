@@ -152,13 +152,14 @@ void draw_weather(GRect rect, WeatherData data, GFont font, GContext *ctx) {
   if (data.temps_count < 2)
     return;
 
-  LayoutBox weather_box = LayoutBox(rect, 10);
+  // padding of 10 px, except for a smaller gap between the divider line and the top row
+  LayoutBox weather_box = LayoutBox(GRect(rect.origin.x, rect.origin.y - 6, rect.size.w, rect.size.h + 6), 10);
   // 1st row: top row for min/max values
   // 2nd row: serves as a spacer to make room for the temperature label that is above the temperature point
   // 3rd row: temp plot
   // 4th row: weather code icons (e.g. cloud, sun)
   // 5th row: x axis with labels
-  static EntryConfig row_configs[] = {{20}, {20}, {0}, {20}, {20}};
+  static EntryConfig row_configs[] = {{20}, {10}, {0}, {20}, {20}};
   static GRect rows[5];
   split_into_rows(weather_box, row_configs, rows, 5);
 
