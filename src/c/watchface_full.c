@@ -166,10 +166,11 @@ void watchface_full_draw(GRect bounds, const WatchfaceDrawContext *draw_ctx, GCo
   const AppTheme *theme = app_theme_current();
   static LayoutBox root;
   root = LayoutBox(bounds, 2);
-  static GRect rows[4];
-  static EntryConfig row_configs[] = {{20}, {52}, {25}, {0}};
-  split_into_rows(root, row_configs, rows, 4);
-  // dbg_draw_outlines(rows, 4, ctx);
+  // 4th row is an empty gap that makes the weather section 15 px smaller
+  static GRect rows[5];
+  static EntryConfig row_configs[] = {{20}, {52}, {25}, {15}, {0}};
+  split_into_rows(root, row_configs, rows, 5);
+  // dbg_draw_outlines(rows, 5, ctx);
   static GRect top_row_rect;
   static GRect time_rect;
   static GRect summary_rect;
@@ -177,7 +178,7 @@ void watchface_full_draw(GRect bounds, const WatchfaceDrawContext *draw_ctx, GCo
   top_row_rect = rows[0];
   time_rect = rows[1];
   summary_rect = rows[2];
-  weather_rect = rows[3];
+  weather_rect = rows[4];
 
   // top row for battery percentage, date, bluetooth
   watchface_full_draw_top_row(top_row_rect, draw_ctx, ctx);
