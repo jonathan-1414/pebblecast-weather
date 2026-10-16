@@ -3,6 +3,9 @@
 #include "weather_icons.h"
 #include <pebble.h>
 
+// The temperature axis always covers at least this many degrees, so that small changes do not look dramatic.
+#define MIN_TEMP_SPAN 6
+
 int compare(const void *a, const void *b) { return *(int8_t *)a - *(int8_t *)b; }
 
 static const char *weather_code_description(int8_t code) {
@@ -172,9 +175,13 @@ void draw_weather(GRect rect, WeatherData data, GFont font, GContext *ctx) {
   plot_rect = rows[2];
   int x_tick_size = (int)((plot_rect.size.w) / (double)(data.temps_count - 1));
 
-  int temp_range = window_max_temp - window_min_temp;
-  if (temp_range == 0)
-    temp_range = 1;
+  // widen the axis around the middle if the actual range is smaller than MIN_TEMP_SPAN
+  double axis_min_temp = window_min_temp;
+  double temp_range = window_max_temp - window_min_temp;
+  if (temp_range < MIN_TEMP_SPAN) {
+    axis_min_temp = (window_min_temp + window_max_temp) / 2.0 - MIN_TEMP_SPAN / 2.0;
+    temp_range = MIN_TEMP_SPAN;
+  }
   int y_pixel_range = plot_rect.size.h;
 
   static GPoint temp_gpoints[24];
@@ -182,7 +189,7 @@ void draw_weather(GRect rect, WeatherData data, GFont font, GContext *ctx) {
   // collect temp points
   for (int i = 0; i < data.temps_count; i++) {
     // y is treated from top when drawing, so we must invert it
-    int y = y_pixel_range - (int)(((data.temps[i] - window_min_temp) / (double)temp_range) * y_pixel_range);
+    int y = y_pixel_range - (int)(((data.temps[i] - axis_min_temp) / temp_range) * y_pixel_range + 0.5);
     temp_gpoints[i] = GPoint(plot_rect.origin.x + i * x_tick_size, plot_rect.origin.y + y);
   }
 
