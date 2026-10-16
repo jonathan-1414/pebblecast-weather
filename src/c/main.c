@@ -21,8 +21,12 @@ static int8_t temps[24];
 static int8_t hours[24];
 static int8_t weather_codes[24];
 static char city_name[32];
-static char s_sun_time[6];
-static int s_sun_is_rise;
+static char s_sunrise_time[6];
+static char s_sunset_time[6];
+static bool s_has_conditions;
+static int s_uv_index;
+static int s_humidity;
+static int s_elevation;
 static int8_t today_temp_max;
 static int8_t today_temp_min;
 
@@ -41,9 +45,25 @@ enum {
   PERSIST_TODAY_TEMP_MAX = 7,
   PERSIST_TODAY_TEMP_MIN = 8,
   PERSIST_THEME_ID = 9,
-  PERSIST_SUN_TIME = 10,
-  PERSIST_SUN_IS_RISE = 11
+  PERSIST_SUNRISE_TIME = 10,
+  // 11 was used for the former SUN_IS_RISE flag
+  PERSIST_SUNSET_TIME = 12,
+  PERSIST_UV_INDEX = 13,
+  PERSIST_HUMIDITY = 14,
+  PERSIST_ELEVATION = 15
 };
+
+// Today's step count, or -1 if health data is not available.
+static int32_t read_steps_today(void) {
+#if defined(PBL_HEALTH)
+  HealthServiceAccessibilityMask mask =
+      health_service_metric_accessible(HealthMetricStepCount, time_start_of_today(), time(NULL));
+  if (mask & HealthServiceAccessibilityMaskAvailable) {
+    return (int32_t)health_service_sum_today(HealthMetricStepCount);
+  }
+#endif
+  return -1;
+}
 
 static void battery_change_handler(BatteryChargeState charge) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "battery_change_handle called");
@@ -95,8 +115,11 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *tomorrow_code = dict_find(iterator, MESSAGE_KEY_TOMORROW_WEATHER_CODE);
   Tuple *city_name_data = dict_find(iterator, MESSAGE_KEY_CITY_NAME);
   Tuple *theme_id_data = dict_find(iterator, MESSAGE_KEY_ThemeId);
-  Tuple *sun_time_data = dict_find(iterator, MESSAGE_KEY_SUN_TIME);
-  Tuple *sun_is_rise_data = dict_find(iterator, MESSAGE_KEY_SUN_IS_RISE);
+  Tuple *sunrise_data = dict_find(iterator, MESSAGE_KEY_SUNRISE_TIME);
+  Tuple *sunset_data = dict_find(iterator, MESSAGE_KEY_SUNSET_TIME);
+  Tuple *uv_index_data = dict_find(iterator, MESSAGE_KEY_UV_INDEX);
+  Tuple *humidity_data = dict_find(iterator, MESSAGE_KEY_HUMIDITY);
+  Tuple *elevation_data = dict_find(iterator, MESSAGE_KEY_ELEVATION);
 
   if (theme_id_data) {
     int theme_id =
@@ -139,13 +162,20 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     persist_write_string(PERSIST_CITY_NAME, city_name);
   }
 
-  if (sun_time_data) {
-    snprintf(s_sun_time, sizeof(s_sun_time), "%s", sun_time_data->value->cstring);
-    persist_write_string(PERSIST_SUN_TIME, s_sun_time);
+  if (sunrise_data && sunset_data) {
+    snprintf(s_sunrise_time, sizeof(s_sunrise_time), "%s", sunrise_data->value->cstring);
+    snprintf(s_sunset_time, sizeof(s_sunset_time), "%s", sunset_data->value->cstring);
+    persist_write_string(PERSIST_SUNRISE_TIME, s_sunrise_time);
+    persist_write_string(PERSIST_SUNSET_TIME, s_sunset_time);
   }
-  if (sun_is_rise_data) {
-    s_sun_is_rise = sun_is_rise_data->value->int32;
-    persist_write_int(PERSIST_SUN_IS_RISE, s_sun_is_rise);
+  if (uv_index_data && humidity_data && elevation_data) {
+    s_uv_index = uv_index_data->value->int32;
+    s_humidity = humidity_data->value->int32;
+    s_elevation = elevation_data->value->int32;
+    s_has_conditions = true;
+    persist_write_int(PERSIST_UV_INDEX, s_uv_index);
+    persist_write_int(PERSIST_HUMIDITY, s_humidity);
+    persist_write_int(PERSIST_ELEVATION, s_elevation);
   }
 
   // persist weather data
@@ -189,8 +219,13 @@ static void draw_watchface(struct Layer *layer, GContext *ctx) {
       WeatherData(temps_count, temps, hours, weather_codes, city_name, today_temp_max, today_temp_min);
   draw_ctx.tomorrow_temp_max = tomorrow_temp_max;
   draw_ctx.tomorrow_weather_code = tomorrow_weather_code;
-  draw_ctx.sun_time = s_sun_time;
-  draw_ctx.sun_is_rise = s_sun_is_rise;
+  draw_ctx.sunrise_time = s_sunrise_time;
+  draw_ctx.sunset_time = s_sunset_time;
+  draw_ctx.has_conditions = s_has_conditions;
+  draw_ctx.uv_index = s_uv_index;
+  draw_ctx.humidity = s_humidity;
+  draw_ctx.elevation = s_elevation;
+  draw_ctx.steps = read_steps_today();
 
   if (watchface_is_compact_bounds(bounds)) {
     watchface_compact_draw(bounds, &draw_ctx, ctx);
@@ -205,7 +240,7 @@ static void prv_window_load(Window *window) {
   GRect bounds = layer_get_bounds(window_layer);
 
   uint32_t time_font_resource =
-      watchface_is_compact_bounds(bounds) ? RESOURCE_ID_FONT_RIGHTEOUS_TIME_32 : RESOURCE_ID_FONT_RIGHTEOUS_TIME_52;
+      watchface_is_compact_bounds(bounds) ? RESOURCE_ID_FONT_RIGHTEOUS_TIME_32 : RESOURCE_ID_FONT_RIGHTEOUS_TIME_36;
   s_time_font = fonts_load_custom_font(resource_get_handle(time_font_resource));
   s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_RIGHTEOUS_DATE_18));
   s_plot_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_RIGHTEOUS_WEATHER_12));
@@ -226,12 +261,16 @@ static void prv_window_load(Window *window) {
   if (persist_exists(PERSIST_CITY_NAME)) {
     persist_read_string(PERSIST_CITY_NAME, city_name, sizeof(city_name));
   }
-  if (persist_exists(PERSIST_SUN_TIME)) {
-     persist_read_string(PERSIST_SUN_TIME, s_sun_time, sizeof(s_sun_time));
-   }
-   if (persist_exists(PERSIST_SUN_IS_RISE)) {
-     s_sun_is_rise = persist_read_int(PERSIST_SUN_IS_RISE);
-   }
+  if (persist_exists(PERSIST_SUNRISE_TIME) && persist_exists(PERSIST_SUNSET_TIME)) {
+    persist_read_string(PERSIST_SUNRISE_TIME, s_sunrise_time, sizeof(s_sunrise_time));
+    persist_read_string(PERSIST_SUNSET_TIME, s_sunset_time, sizeof(s_sunset_time));
+  }
+  if (persist_exists(PERSIST_UV_INDEX) && persist_exists(PERSIST_HUMIDITY) && persist_exists(PERSIST_ELEVATION)) {
+    s_uv_index = persist_read_int(PERSIST_UV_INDEX);
+    s_humidity = persist_read_int(PERSIST_HUMIDITY);
+    s_elevation = persist_read_int(PERSIST_ELEVATION);
+    s_has_conditions = true;
+  }
   if (persist_exists(PERSIST_TODAY_TEMP_MAX) && persist_exists(PERSIST_TODAY_TEMP_MIN)) {
     today_temp_max = persist_read_int(PERSIST_TODAY_TEMP_MAX);
     today_temp_min = persist_read_int(PERSIST_TODAY_TEMP_MIN);

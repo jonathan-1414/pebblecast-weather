@@ -59,27 +59,3 @@ void watchface_draw_bt_strike_through(GRect rect, GContext *ctx) {
 void watchface_draw_weather_section(GRect weather_rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
   draw_weather(weather_rect, draw_ctx->weather_data, draw_ctx->plot_font, ctx);
 }
-
-void watchface_draw_sun_event(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont font, GContext *ctx) {
-  // No data from the phone yet? Then draw nothing.
-  if (draw_ctx->sun_time == NULL || draw_ctx->sun_time[0] == '\0') {
-    return;
-  }
-  const AppTheme *theme = app_theme_current();
-
-  // arrow on the left side of the rect (up = sunrise, down = sunset)
-  GRect arrow_rect = GRect(rect.origin.x + 4, rect.origin.y, 8, rect.size.h);
-  graphics_context_set_stroke_color(ctx, theme->primary_text);
-  graphics_context_set_stroke_width(ctx, 2);
-  if (draw_ctx->sun_is_rise) {
-    draw_arrow_up(ctx, arrow_rect);
-  } else {
-    draw_arrow_down(ctx, arrow_rect);
-  }
-
-  // time to the right of the arrow
-  GRect text_rect = GRect(rect.origin.x + 12, rect.origin.y, rect.size.w - 12, rect.size.h);
-  graphics_context_set_text_color(ctx, theme->primary_text);
-  graphics_draw_text(ctx, draw_ctx->sun_time, font, text_rect, GTextOverflowModeTrailingEllipsis,
-                     GTextAlignmentLeft, NULL);
-}

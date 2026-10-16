@@ -40,25 +40,20 @@ function getCityName(latitude, longitude) {
     });
 }
 
-function nextSunEvent(daily) {
+// returns the next upcoming time ("HH:MM") out of today's and tomorrow's entries
+function nextTime(times) {
     var now = new Date();
-    var events = [
-        { time: daily.sunrise[0], rise: 1 },
-        { time: daily.sunset[0],  rise: 0 },
-        { time: daily.sunrise[1], rise: 1 },
-        { time: daily.sunset[1],  rise: 0 }
-    ];
-    for (var i = 0; i < events.length; i++) {
-        if (now < new Date(events[i].time)) {
-            return events[i];
+    for (var i = 0; i < times.length; i++) {
+        if (now < new Date(times[i])) {
+            return times[i].substring(11, 16);
         }
     }
-    return events[events.length - 1];
+    return times[times.length - 1].substring(11, 16);
 }
 
 function getWeatherData(latitude, longitude) {
     var url = `https://api.open-meteo.com/v1/forecast` +
-        `?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weather_code&forecast_hours=13&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&forecast_days=2&temperature_unit=${getTemperatureUnit()}&timezone=auto`;
+        `?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weather_code&forecast_hours=13&current=relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&forecast_days=2&temperature_unit=${getTemperatureUnit()}&timezone=auto`;
 
     return xhrRequest(url, 'GET').then(function (responseText) {
         return JSON.parse(responseText);
@@ -86,7 +81,6 @@ function locationSuccess(position) {
         var weather_code_bytes = new Int8Array(weatherJson.hourly.weather_code);
         var today_temp_max = Math.round(weatherJson.daily.temperature_2m_max[0]);
         var today_temp_min = Math.round(weatherJson.daily.temperature_2m_min[0]);
-        var sun_event = nextSunEvent(weatherJson.daily);
         var tomorrow_temp_max = Math.round(weatherJson.daily.temperature_2m_max[1]);
         var tomorrow_weather_code = weatherJson.daily.weather_code[1];
         Pebble.sendAppMessage({
@@ -99,9 +93,11 @@ function locationSuccess(position) {
             'TOMORROW_TEMP_MAX': tomorrow_temp_max,
             'TOMORROW_WEATHER_CODE': tomorrow_weather_code,
             'CITY_NAME': cityName.substring(0, 31),
-            'SUN_TIME': sun_event.time.substring(11, 16),
-            'SUN_IS_RISE': sun_event.rise
-
+            'SUNRISE_TIME': nextTime(weatherJson.daily.sunrise),
+            'SUNSET_TIME': nextTime(weatherJson.daily.sunset),
+            'UV_INDEX': Math.round(weatherJson.daily.uv_index_max[0] || 0),
+            'HUMIDITY': Math.round(weatherJson.current.relative_humidity_2m),
+            'ELEVATION': Math.round(weatherJson.elevation)
         });
     }).catch(function () {
         console.log('Error requesting weather!');
