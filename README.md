@@ -45,6 +45,8 @@ If you enjoy the original watch face, consider buying its author a hot beverage.
 - Sunrise, sunset, UV index and elevation are additionally requested from Open-Meteo
 - Only the Pebble Time 2 is supported; the compact layout for smaller watches and the black-and-white themes were removed
 
+The changes were implemented with the help of Claude (Anthropic) as a coding assistant.
+
 ## Building & running
 
 Running the `pebble` commands requires the Pebble SDK. See the [repebble SDK setup guide](https://developer.repebble.com/sdk/) for installation instructions.
