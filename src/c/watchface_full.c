@@ -5,7 +5,7 @@
 
 #define INFO_LINE_HEIGHT 15
 #define INFO_ICON_WIDTH 11
-#define TIME_TEXT_HEIGHT 52
+#define TIME_TEXT_HEIGHT 66
 
 static void draw_text_line(const char *text, GRect rect, GFont font, GTextAlignment alignment, GContext *ctx) {
   const AppTheme *theme = app_theme_current();
@@ -163,7 +163,7 @@ static void watchface_full_draw_top_row(GRect rect, const WatchfaceDrawContext *
 static void watchface_full_draw_time_row(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
   // the row is lower than the font's line height, which would stop the time from being drawn
   watchface_draw_time(GRect(rect.origin.x, rect.origin.y, rect.size.w, TIME_TEXT_HEIGHT), draw_ctx,
-                      draw_ctx->time_font, -6, GTextAlignmentCenter, ctx);
+                      draw_ctx->time_font, -9, GTextAlignmentCenter, ctx);
 }
 
 static void watchface_full_draw_info_row(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
@@ -182,10 +182,10 @@ void watchface_full_draw(GRect bounds, const WatchfaceDrawContext *draw_ctx, GCo
   const AppTheme *theme = app_theme_current();
   static LayoutBox root;
   root = LayoutBox(bounds, 2);
-  // row heights leave about 10 px between the rows of the top section and tomorrow's summary;
+  // row heights leave about 6 px below the date and 10 px around the time;
   // the 4th row is an empty gap, so the summary sits directly above the divider
   static GRect rows[6];
-  static EntryConfig row_configs[] = {{33}, {15}, {39}, {4}, {25}, {0}};
+  static EntryConfig row_configs[] = {{28}, {15}, {44}, {4}, {25}, {0}};
   split_into_rows(root, row_configs, rows, 6);
   // dbg_draw_outlines(rows, 6, ctx);
   static GRect top_row_rect;

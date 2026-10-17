@@ -235,7 +235,7 @@ static void prv_window_load(Window *window) {
   GRect bounds = layer_get_bounds(window_layer);
 
   uint32_t time_font_resource =
-      watchface_is_compact_bounds(bounds) ? RESOURCE_ID_FONT_RIGHTEOUS_TIME_32 : RESOURCE_ID_FONT_RIGHTEOUS_TIME_40;
+      watchface_is_compact_bounds(bounds) ? RESOURCE_ID_FONT_RIGHTEOUS_TIME_32 : RESOURCE_ID_FONT_RIGHTEOUS_TIME_52;
   s_time_font = fonts_load_custom_font(resource_get_handle(time_font_resource));
   uint32_t date_font_resource =
       watchface_is_compact_bounds(bounds) ? RESOURCE_ID_FONT_RIGHTEOUS_DATE_18 : RESOURCE_ID_FONT_RIGHTEOUS_DATE_21;
