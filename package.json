@@ -52,19 +52,7 @@
       "media": [
         {
           "type": "font",
-          "name": "FONT_RIGHTEOUS_TIME_64",
-          "file": "fonts/Righteous-Regular.ttf",
-          "characterRegex": "[:0-9]"
-        },
-        {
-          "type": "font",
           "name": "FONT_RIGHTEOUS_TIME_52",
-          "file": "fonts/Righteous-Regular.ttf",
-          "characterRegex": "[ 0-9]"
-        },
-        {
-          "type": "font",
-          "name": "FONT_RIGHTEOUS_TIME_40",
           "file": "fonts/Righteous-Regular.ttf",
           "characterRegex": "[ 0-9]"
         },
@@ -73,12 +61,6 @@
           "name": "FONT_RIGHTEOUS_TIME_32",
           "file": "fonts/Righteous-Regular.ttf",
           "characterRegex": "[ 0-9]"
-        },
-        {
-          "type": "font",
-          "name": "FONT_RIGHTEOUS_DATE_12",
-          "file": "fonts/Righteous-Regular.ttf",
-          "characterRegex": "[0-9A-Za-z ]"
         },
         {
           "type": "font",
