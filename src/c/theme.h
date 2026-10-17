@@ -9,18 +9,14 @@ typedef enum {
 typedef enum {
   APP_THEME_DARK = 0,
   APP_THEME_LIGHT = 1,
-  APP_THEME_BW_DARK = 2,
-  APP_THEME_BW_LIGHT = 3,
-  APP_THEME_COUNT = 4,
+  APP_THEME_COUNT = 2,
 } AppThemeId;
 
 typedef struct {
   GColor8 background;
   GColor8 primary_text;
   GColor8 divider;
-  GColor8 battery_border;
   GColor8 battery_low;
-  GColor8 battery_ok;
   GColor8 weather_sun;
   GColor8 weather_cloud;
   GColor8 weather_rain;

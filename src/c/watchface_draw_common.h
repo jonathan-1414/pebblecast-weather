@@ -22,7 +22,6 @@ typedef struct {
   int32_t steps;
 } WatchfaceDrawContext;
 
-bool watchface_is_compact_bounds(GRect bounds);
 void watchface_draw_date(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont font, GTextAlignment alignment,
                          GContext *ctx);
 void watchface_draw_time(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont font, int y_offset,

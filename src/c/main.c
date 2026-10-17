@@ -1,5 +1,4 @@
 #include "theme.h"
-#include "watchface_compact.h"
 #include "watchface_full.h"
 #include "weather.h"
 #include <pebble.h>
@@ -222,24 +221,15 @@ static void draw_watchface(struct Layer *layer, GContext *ctx) {
   draw_ctx.elevation = s_elevation;
   draw_ctx.steps = read_steps_today();
 
-  if (watchface_is_compact_bounds(bounds)) {
-    watchface_compact_draw(bounds, &draw_ctx, ctx);
-  } else {
-    watchface_full_draw(bounds, &draw_ctx, ctx);
-  }
+  watchface_full_draw(bounds, &draw_ctx, ctx);
 }
 
 static void prv_window_load(Window *window) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "prv_window_load called");
   window_layer = window_get_root_layer(window);
-  GRect bounds = layer_get_bounds(window_layer);
 
-  uint32_t time_font_resource =
-      watchface_is_compact_bounds(bounds) ? RESOURCE_ID_FONT_RIGHTEOUS_TIME_32 : RESOURCE_ID_FONT_RIGHTEOUS_TIME_52;
-  s_time_font = fonts_load_custom_font(resource_get_handle(time_font_resource));
-  uint32_t date_font_resource =
-      watchface_is_compact_bounds(bounds) ? RESOURCE_ID_FONT_RIGHTEOUS_DATE_18 : RESOURCE_ID_FONT_RIGHTEOUS_DATE_21;
-  s_date_font = fonts_load_custom_font(resource_get_handle(date_font_resource));
+  s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_RIGHTEOUS_TIME_52));
+  s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_RIGHTEOUS_DATE_21));
   s_plot_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_RIGHTEOUS_WEATHER_12));
 
   layer_set_update_proc(window_layer, draw_watchface);

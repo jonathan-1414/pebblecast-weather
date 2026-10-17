@@ -1,5 +1,4 @@
 #include "watchface_full.h"
-#include "battery.h"
 #include "layout.h"
 #include "theme.h"
 

@@ -1,8 +1,6 @@
 #include "watchface_draw_common.h"
 #include "theme.h"
 
-bool watchface_is_compact_bounds(GRect bounds) { return bounds.size.h <= 168; }
-
 void watchface_draw_date(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont font, GTextAlignment alignment,
                          GContext *ctx) {
   const AppTheme *theme = app_theme_current();
