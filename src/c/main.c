@@ -25,7 +25,6 @@ static char s_sunrise_time[6];
 static char s_sunset_time[6];
 static bool s_has_conditions;
 static int s_uv_index;
-static int s_humidity;
 static int s_elevation;
 static int8_t today_temp_max;
 static int8_t today_temp_min;
@@ -49,7 +48,7 @@ enum {
   // 11 was used for the former SUN_IS_RISE flag
   PERSIST_SUNSET_TIME = 12,
   PERSIST_UV_INDEX = 13,
-  PERSIST_HUMIDITY = 14,
+  // 14 was used for the former HUMIDITY value
   PERSIST_ELEVATION = 15
 };
 
@@ -118,7 +117,6 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *sunrise_data = dict_find(iterator, MESSAGE_KEY_SUNRISE_TIME);
   Tuple *sunset_data = dict_find(iterator, MESSAGE_KEY_SUNSET_TIME);
   Tuple *uv_index_data = dict_find(iterator, MESSAGE_KEY_UV_INDEX);
-  Tuple *humidity_data = dict_find(iterator, MESSAGE_KEY_HUMIDITY);
   Tuple *elevation_data = dict_find(iterator, MESSAGE_KEY_ELEVATION);
 
   if (theme_id_data) {
@@ -168,13 +166,11 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     persist_write_string(PERSIST_SUNRISE_TIME, s_sunrise_time);
     persist_write_string(PERSIST_SUNSET_TIME, s_sunset_time);
   }
-  if (uv_index_data && humidity_data && elevation_data) {
+  if (uv_index_data && elevation_data) {
     s_uv_index = uv_index_data->value->int32;
-    s_humidity = humidity_data->value->int32;
     s_elevation = elevation_data->value->int32;
     s_has_conditions = true;
     persist_write_int(PERSIST_UV_INDEX, s_uv_index);
-    persist_write_int(PERSIST_HUMIDITY, s_humidity);
     persist_write_int(PERSIST_ELEVATION, s_elevation);
   }
 
@@ -223,7 +219,6 @@ static void draw_watchface(struct Layer *layer, GContext *ctx) {
   draw_ctx.sunset_time = s_sunset_time;
   draw_ctx.has_conditions = s_has_conditions;
   draw_ctx.uv_index = s_uv_index;
-  draw_ctx.humidity = s_humidity;
   draw_ctx.elevation = s_elevation;
   draw_ctx.steps = read_steps_today();
 
@@ -240,9 +235,11 @@ static void prv_window_load(Window *window) {
   GRect bounds = layer_get_bounds(window_layer);
 
   uint32_t time_font_resource =
-      watchface_is_compact_bounds(bounds) ? RESOURCE_ID_FONT_RIGHTEOUS_TIME_32 : RESOURCE_ID_FONT_RIGHTEOUS_TIME_36;
+      watchface_is_compact_bounds(bounds) ? RESOURCE_ID_FONT_RIGHTEOUS_TIME_32 : RESOURCE_ID_FONT_RIGHTEOUS_TIME_40;
   s_time_font = fonts_load_custom_font(resource_get_handle(time_font_resource));
-  s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_RIGHTEOUS_DATE_18));
+  uint32_t date_font_resource =
+      watchface_is_compact_bounds(bounds) ? RESOURCE_ID_FONT_RIGHTEOUS_DATE_18 : RESOURCE_ID_FONT_RIGHTEOUS_DATE_21;
+  s_date_font = fonts_load_custom_font(resource_get_handle(date_font_resource));
   s_plot_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_RIGHTEOUS_WEATHER_12));
 
   layer_set_update_proc(window_layer, draw_watchface);
@@ -265,9 +262,8 @@ static void prv_window_load(Window *window) {
     persist_read_string(PERSIST_SUNRISE_TIME, s_sunrise_time, sizeof(s_sunrise_time));
     persist_read_string(PERSIST_SUNSET_TIME, s_sunset_time, sizeof(s_sunset_time));
   }
-  if (persist_exists(PERSIST_UV_INDEX) && persist_exists(PERSIST_HUMIDITY) && persist_exists(PERSIST_ELEVATION)) {
+  if (persist_exists(PERSIST_UV_INDEX) && persist_exists(PERSIST_ELEVATION)) {
     s_uv_index = persist_read_int(PERSIST_UV_INDEX);
-    s_humidity = persist_read_int(PERSIST_HUMIDITY);
     s_elevation = persist_read_int(PERSIST_ELEVATION);
     s_has_conditions = true;
   }

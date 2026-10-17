@@ -53,7 +53,7 @@ function nextTime(times) {
 
 function getWeatherData(latitude, longitude) {
     var url = `https://api.open-meteo.com/v1/forecast` +
-        `?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weather_code&forecast_hours=13&current=relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&forecast_days=2&temperature_unit=${getTemperatureUnit()}&timezone=auto`;
+        `?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weather_code&forecast_hours=13&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&forecast_days=2&temperature_unit=${getTemperatureUnit()}&timezone=auto`;
 
     return xhrRequest(url, 'GET').then(function (responseText) {
         return JSON.parse(responseText);
@@ -96,7 +96,6 @@ function locationSuccess(position) {
             'SUNRISE_TIME': nextTime(weatherJson.daily.sunrise),
             'SUNSET_TIME': nextTime(weatherJson.daily.sunset),
             'UV_INDEX': Math.round(weatherJson.daily.uv_index_max[0] || 0),
-            'HUMIDITY': Math.round(weatherJson.current.relative_humidity_2m),
             'ELEVATION': Math.round(weatherJson.elevation)
         });
     }).catch(function () {

@@ -14,10 +14,9 @@ typedef struct {
   int8_t tomorrow_weather_code;
   const char *sunrise_time;
   const char *sunset_time;
-  // true once UV index, humidity and elevation have been received
+  // true once UV index and elevation have been received
   bool has_conditions;
   int uv_index;
-  int humidity;
   int elevation;
   // today's step count, -1 if not available
   int32_t steps;

@@ -5,11 +5,16 @@
 
 #define INFO_LINE_HEIGHT 15
 #define INFO_ICON_WIDTH 11
+#define TIME_TEXT_HEIGHT 52
+// lowest pixel row of the time digits, relative to the time row
+#define TIME_BOTTOM 33
+// lowest pixel row of info text, relative to its line rect
+#define INFO_TEXT_BOTTOM 9
 
-static void draw_text_line(const char *text, GRect rect, GFont font, GContext *ctx) {
+static void draw_text_line(const char *text, GRect rect, GFont font, GTextAlignment alignment, GContext *ctx) {
   const AppTheme *theme = app_theme_current();
   graphics_context_set_text_color(ctx, theme->primary_text);
-  graphics_draw_text(ctx, text, font, rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, text, font, rect, GTextOverflowModeTrailingEllipsis, alignment, NULL);
 }
 
 // small sun on a horizon line with a chevron above it (up = sunrise, down = sunset)
@@ -29,20 +34,6 @@ static void draw_sun_icon(GRect rect, bool rise, GContext *ctx) {
   int base_y = rise ? rect.origin.y + 5 : rect.origin.y + 2;
   graphics_draw_line(ctx, GPoint(cx - 3, base_y), GPoint(cx, tip_y));
   graphics_draw_line(ctx, GPoint(cx, tip_y), GPoint(cx + 3, base_y));
-}
-
-static void draw_drop_icon(GRect rect, GContext *ctx) {
-  const AppTheme *theme = app_theme_current();
-  int cx = rect.origin.x + 5;
-  int cy = rect.origin.y + 10;
-  graphics_context_set_fill_color(ctx, theme->weather_rain);
-  graphics_context_set_stroke_color(ctx, theme->weather_rain);
-  graphics_context_set_stroke_width(ctx, 1);
-  graphics_fill_circle(ctx, GPoint(cx, cy), 3);
-  for (int dy = 1; dy <= 4; dy++) {
-    int half_w = (4 - dy) * 3 / 4;
-    graphics_draw_line(ctx, GPoint(cx - half_w, cy - 2 - dy), GPoint(cx + half_w, cy - 2 - dy));
-  }
 }
 
 static void draw_mountain_icon(GRect rect, GContext *ctx) {
@@ -70,9 +61,9 @@ static void draw_steps_icon(GRect rect, GContext *ctx) {
   graphics_fill_rect(ctx, GRect(x + 6, y + 7, 4, 2), 0, GCornerNone);
 }
 
-static GRect info_line_rect(GRect column, int line) {
-  int top = column.origin.y + (column.size.h - 3 * INFO_LINE_HEIGHT) / 2;
-  return GRect(column.origin.x, top + line * INFO_LINE_HEIGHT, column.size.w, INFO_LINE_HEIGHT);
+// one info line, vertically centered in its row
+static GRect info_line_rect(GRect rect) {
+  return GRect(rect.origin.x, rect.origin.y + (rect.size.h - INFO_LINE_HEIGHT) / 2, rect.size.w, INFO_LINE_HEIGHT);
 }
 
 static GRect info_text_rect(GRect line_rect) {
@@ -81,47 +72,69 @@ static GRect info_text_rect(GRect line_rect) {
                line_rect.size.h + 2);
 }
 
-// left of the time: sunrise, sunset, steps
-static void draw_left_info(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
-  GFont font = draw_ctx->plot_font;
-  if (draw_ctx->sunrise_time[0] != '\0') {
-    GRect line = info_line_rect(rect, 0);
-    draw_sun_icon(line, true, ctx);
-    draw_text_line(draw_ctx->sunrise_time, info_text_rect(line), font, ctx);
-    line = info_line_rect(rect, 1);
-    draw_sun_icon(line, false, ctx);
-    draw_text_line(draw_ctx->sunset_time, info_text_rect(line), font, ctx);
-  }
-  if (draw_ctx->steps >= 0) {
-    static char steps_buf[12];
-    snprintf(steps_buf, sizeof(steps_buf), "%ld", (long)draw_ctx->steps);
-    GRect line = info_line_rect(rect, 2);
-    draw_steps_icon(line, ctx);
-    draw_text_line(steps_buf, info_text_rect(line), font, ctx);
-  }
+// one info line whose text ends on the same pixel row as the time digits
+static GRect time_aligned_line_rect(GRect rect) {
+  return GRect(rect.origin.x, rect.origin.y + TIME_BOTTOM - INFO_TEXT_BOTTOM, rect.size.w, INFO_LINE_HEIGHT);
 }
 
-// right of the time: UV index, humidity, elevation
-static void draw_right_info(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
+// minutes from now until the next occurrence of an "HH:MM" time
+static int minutes_until(const char *hhmm, const struct tm *now) {
+  int event = ((hhmm[0] - '0') * 10 + (hhmm[1] - '0')) * 60 + (hhmm[3] - '0') * 10 + (hhmm[4] - '0');
+  int current = now->tm_hour * 60 + now->tm_min;
+  return (event - current + 24 * 60) % (24 * 60);
+}
+
+// only the next sun event: sunset during the day, sunrise during the night
+static void draw_next_sun_event(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
+  if (draw_ctx->sunrise_time[0] == '\0' || draw_ctx->sunset_time[0] == '\0') {
+    return;
+  }
+  bool rise =
+      minutes_until(draw_ctx->sunrise_time, draw_ctx->tick_time) < minutes_until(draw_ctx->sunset_time, draw_ctx->tick_time);
+  GRect line = time_aligned_line_rect(rect);
+  // move the icon up so its horizon line sits on the text's bottom row
+  draw_sun_icon(GRect(line.origin.x, line.origin.y - 3, line.size.w, line.size.h), rise, ctx);
+  draw_text_line(rise ? draw_ctx->sunrise_time : draw_ctx->sunset_time, info_text_rect(line), draw_ctx->plot_font,
+                 GTextAlignmentLeft, ctx);
+}
+
+static void draw_uv_index(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
   if (!draw_ctx->has_conditions) {
     return;
   }
-  GFont font = draw_ctx->plot_font;
   static char uv_buf[12];
-  static char humidity_buf[12];
-  static char elevation_buf[12];
   snprintf(uv_buf, sizeof(uv_buf), "UV %d", draw_ctx->uv_index);
-  snprintf(humidity_buf, sizeof(humidity_buf), "%d%%", draw_ctx->humidity);
-  snprintf(elevation_buf, sizeof(elevation_buf), "%d", draw_ctx->elevation);
+  GRect line = time_aligned_line_rect(rect);
+  draw_text_line(uv_buf, GRect(line.origin.x, line.origin.y - 2, line.size.w, line.size.h + 2), draw_ctx->plot_font,
+                 GTextAlignmentRight, ctx);
+}
 
-  GRect line = info_line_rect(rect, 0);
-  draw_text_line(uv_buf, GRect(line.origin.x, line.origin.y - 2, line.size.w, line.size.h + 2), font, ctx);
-  line = info_line_rect(rect, 1);
-  draw_drop_icon(line, ctx);
-  draw_text_line(humidity_buf, info_text_rect(line), font, ctx);
-  line = info_line_rect(rect, 2);
-  draw_mountain_icon(line, ctx);
-  draw_text_line(elevation_buf, info_text_rect(line), font, ctx);
+static void draw_steps(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
+  if (draw_ctx->steps < 0) {
+    return;
+  }
+  static char steps_buf[12];
+  snprintf(steps_buf, sizeof(steps_buf), "%ld", (long)draw_ctx->steps);
+  GRect line = info_line_rect(rect);
+  draw_steps_icon(line, ctx);
+  draw_text_line(steps_buf, info_text_rect(line), draw_ctx->plot_font, GTextAlignmentLeft, ctx);
+}
+
+static void draw_elevation(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
+  if (!draw_ctx->has_conditions) {
+    return;
+  }
+  static char elevation_buf[12];
+  snprintf(elevation_buf, sizeof(elevation_buf), "%d", draw_ctx->elevation);
+  GRect line = info_line_rect(rect);
+  GRect text_rect = info_text_rect(line);
+  draw_text_line(elevation_buf, text_rect, draw_ctx->plot_font, GTextAlignmentRight, ctx);
+  // the icon sits directly left of the right-aligned text
+  GSize text_size = graphics_text_layout_get_content_size(elevation_buf, draw_ctx->plot_font, text_rect,
+                                                          GTextOverflowModeTrailingEllipsis, GTextAlignmentRight);
+  draw_mountain_icon(GRect(line.origin.x + line.size.w - text_size.w - INFO_ICON_WIDTH, line.origin.y,
+                           INFO_ICON_WIDTH, line.size.h),
+                     ctx);
 }
 
 static void watchface_full_draw_top_row(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
@@ -157,35 +170,53 @@ static void watchface_full_draw_time_row(GRect rect, const WatchfaceDrawContext 
   static GRect cols[3];
   split_into_columns(time_row, col_configs, cols, 3);
 
-  draw_left_info(cols[0], draw_ctx, ctx);
-  watchface_draw_time(rect, draw_ctx, draw_ctx->time_font, -6, GTextAlignmentCenter, ctx);
-  draw_right_info(cols[2], draw_ctx, ctx);
+  draw_next_sun_event(cols[0], draw_ctx, ctx);
+  // the row is lower than the font's line height, which would stop the time from being drawn
+  watchface_draw_time(GRect(rect.origin.x, rect.origin.y, rect.size.w, TIME_TEXT_HEIGHT), draw_ctx,
+                      draw_ctx->time_font, -6, GTextAlignmentCenter, ctx);
+  draw_uv_index(cols[2], draw_ctx, ctx);
+}
+
+static void watchface_full_draw_info_row(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
+  static LayoutBox info_row;
+  info_row = LayoutBox(rect, 0);
+  static EntryConfig col_configs[] = {{52}, {0}, {52}};
+  static GRect cols[3];
+  split_into_columns(info_row, col_configs, cols, 3);
+
+  draw_steps(cols[0], draw_ctx, ctx);
+  draw_elevation(cols[2], draw_ctx, ctx);
 }
 
 void watchface_full_draw(GRect bounds, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
   const AppTheme *theme = app_theme_current();
   static LayoutBox root;
   root = LayoutBox(bounds, 2);
-  // 3rd row is an empty gap that makes the weather section 15 px smaller,
-  // so tomorrow's summary sits directly above the divider
-  static GRect rows[5];
-  static EntryConfig row_configs[] = {{20}, {52}, {15}, {25}, {0}};
-  split_into_rows(root, row_configs, rows, 5);
-  // dbg_draw_outlines(rows, 5, ctx);
+  // row heights leave about 10 px between the rows of the top section and tomorrow's summary;
+  // the 4th row is an empty gap, so the summary sits directly above the divider
+  static GRect rows[6];
+  static EntryConfig row_configs[] = {{25}, {43}, {15}, {4}, {25}, {0}};
+  split_into_rows(root, row_configs, rows, 6);
+  // dbg_draw_outlines(rows, 6, ctx);
   static GRect top_row_rect;
   static GRect time_rect;
+  static GRect info_rect;
   static GRect summary_rect;
   static GRect weather_rect;
   top_row_rect = rows[0];
   time_rect = rows[1];
-  summary_rect = rows[3];
-  weather_rect = rows[4];
+  info_rect = rows[2];
+  summary_rect = rows[4];
+  weather_rect = rows[5];
 
   // top row for battery percentage, date, bluetooth
   watchface_full_draw_top_row(top_row_rect, draw_ctx, ctx);
 
-  // time, framed by sun times / steps and UV / humidity / elevation
+  // time, framed by the next sun event and the UV index
   watchface_full_draw_time_row(time_rect, draw_ctx, ctx);
+
+  // steps and elevation below the time
+  watchface_full_draw_info_row(info_rect, draw_ctx, ctx);
 
   // weather summary for tomorrow
   draw_weather_summary(summary_rect, "Morgen", draw_ctx->tomorrow_weather_code, draw_ctx->tomorrow_temp_max,
