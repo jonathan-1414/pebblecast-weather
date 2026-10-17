@@ -6,10 +6,6 @@
 #define INFO_LINE_HEIGHT 15
 #define INFO_ICON_WIDTH 11
 #define TIME_TEXT_HEIGHT 52
-// lowest pixel row of the time digits, relative to the time row
-#define TIME_BOTTOM 33
-// lowest pixel row of info text, relative to its line rect
-#define INFO_TEXT_BOTTOM 9
 
 static void draw_text_line(const char *text, GRect rect, GFont font, GTextAlignment alignment, GContext *ctx) {
   const AppTheme *theme = app_theme_current();
@@ -72,11 +68,6 @@ static GRect info_text_rect(GRect line_rect) {
                line_rect.size.h + 2);
 }
 
-// one info line whose text ends on the same pixel row as the time digits
-static GRect time_aligned_line_rect(GRect rect) {
-  return GRect(rect.origin.x, rect.origin.y + TIME_BOTTOM - INFO_TEXT_BOTTOM, rect.size.w, INFO_LINE_HEIGHT);
-}
-
 // minutes from now until the next occurrence of an "HH:MM" time
 static int minutes_until(const char *hhmm, const struct tm *now) {
   int event = ((hhmm[0] - '0') * 10 + (hhmm[1] - '0')) * 60 + (hhmm[3] - '0') * 10 + (hhmm[4] - '0');
@@ -91,11 +82,16 @@ static void draw_next_sun_event(GRect rect, const WatchfaceDrawContext *draw_ctx
   }
   bool rise =
       minutes_until(draw_ctx->sunrise_time, draw_ctx->tick_time) < minutes_until(draw_ctx->sunset_time, draw_ctx->tick_time);
-  GRect line = time_aligned_line_rect(rect);
+  const char *text = rise ? draw_ctx->sunrise_time : draw_ctx->sunset_time;
+  GRect line = info_line_rect(rect);
+  // center icon and text together across the row
+  GSize text_size = graphics_text_layout_get_content_size(text, draw_ctx->plot_font, info_text_rect(line),
+                                                          GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
+  int width = INFO_ICON_WIDTH + text_size.w;
+  GRect centered = GRect(line.origin.x + (line.size.w - width) / 2, line.origin.y, width, line.size.h);
   // move the icon up so its horizon line sits on the text's bottom row
-  draw_sun_icon(GRect(line.origin.x, line.origin.y - 3, line.size.w, line.size.h), rise, ctx);
-  draw_text_line(rise ? draw_ctx->sunrise_time : draw_ctx->sunset_time, info_text_rect(line), draw_ctx->plot_font,
-                 GTextAlignmentLeft, ctx);
+  draw_sun_icon(GRect(centered.origin.x, centered.origin.y - 3, centered.size.w, centered.size.h), rise, ctx);
+  draw_text_line(text, info_text_rect(centered), draw_ctx->plot_font, GTextAlignmentLeft, ctx);
 }
 
 static void draw_uv_index(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
@@ -104,9 +100,7 @@ static void draw_uv_index(GRect rect, const WatchfaceDrawContext *draw_ctx, GCon
   }
   static char uv_buf[12];
   snprintf(uv_buf, sizeof(uv_buf), "UV %d", draw_ctx->uv_index);
-  GRect line = time_aligned_line_rect(rect);
-  draw_text_line(uv_buf, GRect(line.origin.x, line.origin.y - 2, line.size.w, line.size.h + 2), draw_ctx->plot_font,
-                 GTextAlignmentRight, ctx);
+  draw_text_line(uv_buf, rect, draw_ctx->plot_font, GTextAlignmentRight, ctx);
 }
 
 static void draw_steps(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
@@ -156,7 +150,10 @@ static void watchface_full_draw_top_row(GRect rect, const WatchfaceDrawContext *
   // draw date centered across the whole row, not just the middle column
   watchface_draw_date(rect, draw_ctx, draw_ctx->date_font, GTextAlignmentCenter, ctx);
 
-  if (!draw_ctx->bluetooth_connected) {
+  // the corner shows the UV index, or the bluetooth icon while disconnected
+  if (draw_ctx->bluetooth_connected) {
+    draw_uv_index(cols[2], draw_ctx, ctx);
+  } else {
     static GRect bluetooth_rect;
     bluetooth_rect = GRect(cols[2].origin.x + cols[2].size.w - 14, cols[2].origin.y, 14, 14);
     watchface_draw_bt_strike_through(bluetooth_rect, ctx);
@@ -164,17 +161,9 @@ static void watchface_full_draw_top_row(GRect rect, const WatchfaceDrawContext *
 }
 
 static void watchface_full_draw_time_row(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
-  static LayoutBox time_row;
-  time_row = LayoutBox(rect, 0);
-  static EntryConfig col_configs[] = {{52}, {0}, {52}};
-  static GRect cols[3];
-  split_into_columns(time_row, col_configs, cols, 3);
-
-  draw_next_sun_event(cols[0], draw_ctx, ctx);
   // the row is lower than the font's line height, which would stop the time from being drawn
   watchface_draw_time(GRect(rect.origin.x, rect.origin.y, rect.size.w, TIME_TEXT_HEIGHT), draw_ctx,
                       draw_ctx->time_font, -6, GTextAlignmentCenter, ctx);
-  draw_uv_index(cols[2], draw_ctx, ctx);
 }
 
 static void watchface_full_draw_info_row(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
@@ -185,6 +174,7 @@ static void watchface_full_draw_info_row(GRect rect, const WatchfaceDrawContext 
   split_into_columns(info_row, col_configs, cols, 3);
 
   draw_steps(cols[0], draw_ctx, ctx);
+  draw_next_sun_event(rect, draw_ctx, ctx);
   draw_elevation(cols[2], draw_ctx, ctx);
 }
 
@@ -195,7 +185,7 @@ void watchface_full_draw(GRect bounds, const WatchfaceDrawContext *draw_ctx, GCo
   // row heights leave about 10 px between the rows of the top section and tomorrow's summary;
   // the 4th row is an empty gap, so the summary sits directly above the divider
   static GRect rows[6];
-  static EntryConfig row_configs[] = {{25}, {43}, {15}, {4}, {25}, {0}};
+  static EntryConfig row_configs[] = {{33}, {15}, {39}, {4}, {25}, {0}};
   split_into_rows(root, row_configs, rows, 6);
   // dbg_draw_outlines(rows, 6, ctx);
   static GRect top_row_rect;
@@ -204,19 +194,19 @@ void watchface_full_draw(GRect bounds, const WatchfaceDrawContext *draw_ctx, GCo
   static GRect summary_rect;
   static GRect weather_rect;
   top_row_rect = rows[0];
-  time_rect = rows[1];
-  info_rect = rows[2];
+  info_rect = rows[1];
+  time_rect = rows[2];
   summary_rect = rows[4];
   weather_rect = rows[5];
 
-  // top row for battery percentage, date, bluetooth
+  // top row for battery percentage, date, UV index or bluetooth
   watchface_full_draw_top_row(top_row_rect, draw_ctx, ctx);
 
-  // time, framed by the next sun event and the UV index
-  watchface_full_draw_time_row(time_rect, draw_ctx, ctx);
-
-  // steps and elevation below the time
+  // steps, next sun event and elevation
   watchface_full_draw_info_row(info_rect, draw_ctx, ctx);
+
+  // time
+  watchface_full_draw_time_row(time_rect, draw_ctx, ctx);
 
   // weather summary for tomorrow
   draw_weather_summary(summary_rect, "Morgen", draw_ctx->tomorrow_weather_code, draw_ctx->tomorrow_temp_max,
