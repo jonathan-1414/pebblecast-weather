@@ -2,7 +2,7 @@
 
 A German Pebble Time 2 watch face that visualizes the weather for the next 12 hours. Written in C.
 
-Pebblecast DE is a modified version of [Pebblecast Weather](https://github.com/ConstantinMatheis/pebblecast-weather) by Constantin Matheis. It has been modified by J. Heuer since October 2026; see [Changes from the original](#changes-from-the-original).
+Pebblecast DE is a modified version of [Pebblecast Weather](https://github.com/ConstantinMatheis/pebblecast-weather) by Constantin Matheis. It has been modified by [jonathan-1414](https://github.com/jonathan-1414) since October 2026; see [Changes from the original](#changes-from-the-original).
 
 If you enjoy the original watch face, consider buying its author a hot beverage.
 
