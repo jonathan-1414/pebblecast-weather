@@ -19,7 +19,7 @@ void watchface_draw_time(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont
                          GTextAlignment alignment, GContext *ctx) {
   const AppTheme *theme = app_theme_current();
   static char time_buffer[12];
-  strftime(time_buffer, sizeof(time_buffer), clock_is_24h_style() ? "%H:%M" : "%I:%M", draw_ctx->tick_time);
+  strftime(time_buffer, sizeof(time_buffer), clock_is_24h_style() ? "%H %M" : "%I %M", draw_ctx->tick_time);
 
   // Custom fonts need a small vertical adjustment to align visually within their row.
   rect.origin.y += y_offset;
