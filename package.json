@@ -11,7 +11,7 @@
     "@rebble/clay": "^1.0.10"
   },
   "pebble": {
-    "displayName": "Pebblecast DE sunevent",
+    "displayName": "Pebblecast DE",
     "uuid": "8c80ee21-94dd-4dd0-af67-8edf786a4a4e",
     "sdkVersion": "3",
     "enableMultiJS": true,

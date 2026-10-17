@@ -1,7 +1,7 @@
 module.exports = [
     {
         "type": "heading",
-        "defaultValue": "Pebblecast Weather Settings"
+        "defaultValue": "Pebblecast DE Settings"
     },
     {
         "type": "section",
