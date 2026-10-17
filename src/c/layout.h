@@ -21,10 +21,3 @@ typedef struct {
 GRect get_effective_rect(LayoutBox layout_box);
 void split_into_rows(LayoutBox parent, EntryConfig *entry_configs, GRect *result, int count);
 void split_into_columns(LayoutBox parent, EntryConfig *entry_configs, GRect *result, int count);
-
-static void dbg_draw_outlines(GRect *rects, int count, GContext *ctx) {
-  graphics_context_set_stroke_color(ctx, GColorWhite);
-  for (int i = 0; i < count; i++) {
-    graphics_draw_rect(ctx, rects[i]);
-  }
-}

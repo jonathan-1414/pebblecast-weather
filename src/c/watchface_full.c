@@ -192,7 +192,6 @@ void watchface_full_draw(GRect bounds, const WatchfaceDrawContext *draw_ctx, GCo
   static GRect rows[6];
   static EntryConfig row_configs[] = {{28}, {15}, {44}, {4}, {25}, {0}};
   split_into_rows(root, row_configs, rows, 6);
-  // dbg_draw_outlines(rows, 6, ctx);
   static GRect top_row_rect;
   static GRect time_rect;
   static GRect info_rect;
@@ -224,5 +223,5 @@ void watchface_full_draw(GRect bounds, const WatchfaceDrawContext *draw_ctx, GCo
                      GPoint(weather_rect.origin.x + weather_rect.size.w - 20, weather_rect.origin.y));
 
   // weather plot
-  watchface_draw_weather_section(weather_rect, draw_ctx, ctx);
+  draw_weather(weather_rect, draw_ctx->weather_data, draw_ctx->plot_font, ctx);
 }

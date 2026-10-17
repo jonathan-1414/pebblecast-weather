@@ -27,4 +27,3 @@ void watchface_draw_date(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont
 void watchface_draw_time(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont font, int y_offset,
                          GTextAlignment alignment, GContext *ctx);
 void watchface_draw_bt_strike_through(GRect rect, GContext *ctx);
-void watchface_draw_weather_section(GRect weather_rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx);

@@ -53,7 +53,3 @@ void watchface_draw_bt_strike_through(GRect rect, GContext *ctx) {
   graphics_draw_line(ctx, GPoint(rect.origin.x, rect.origin.y),
                      GPoint(rect.origin.x + rect.size.w - 1, rect.origin.y + rect.size.h - 1));
 }
-
-void watchface_draw_weather_section(GRect weather_rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
-  draw_weather(weather_rect, draw_ctx->weather_data, draw_ctx->plot_font, ctx);
-}
