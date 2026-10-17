@@ -5,6 +5,8 @@
 
 #define INFO_LINE_HEIGHT 15
 #define INFO_ICON_WIDTH 11
+// moves battery and UV down so their tops line up with the date
+#define CORNER_TEXT_OFFSET 2
 #define TIME_TEXT_HEIGHT 66
 
 static void draw_text_line(const char *text, GRect rect, GFont font, GTextAlignment alignment, GContext *ctx) {
@@ -138,13 +140,17 @@ static void watchface_full_draw_top_row(GRect rect, const WatchfaceDrawContext *
   static EntryConfig col_configs[] = {{40}, {0}, {40}};
   static GRect cols[3];
   split_into_columns(top_row, col_configs, cols, 3);
+  static GRect left_text_rect;
+  static GRect right_text_rect;
+  left_text_rect = GRect(cols[0].origin.x, cols[0].origin.y + CORNER_TEXT_OFFSET, cols[0].size.w, cols[0].size.h);
+  right_text_rect = GRect(cols[2].origin.x, cols[2].origin.y + CORNER_TEXT_OFFSET, cols[2].size.w, cols[2].size.h);
 
   // battery as percentage
   static char battery_buf[8];
   snprintf(battery_buf, sizeof(battery_buf), "%d%%", draw_ctx->battery_charge_percent);
   graphics_context_set_text_color(ctx, draw_ctx->battery_charge_percent <= 20 ? theme->battery_low
                                                                                  : theme->primary_text);
-  graphics_draw_text(ctx, battery_buf, draw_ctx->plot_font, cols[0], GTextOverflowModeTrailingEllipsis,
+  graphics_draw_text(ctx, battery_buf, draw_ctx->plot_font, left_text_rect, GTextOverflowModeTrailingEllipsis,
                      GTextAlignmentLeft, NULL);
 
   // draw date centered across the whole row, not just the middle column
@@ -152,7 +158,7 @@ static void watchface_full_draw_top_row(GRect rect, const WatchfaceDrawContext *
 
   // the corner shows the UV index, or the bluetooth icon while disconnected
   if (draw_ctx->bluetooth_connected) {
-    draw_uv_index(cols[2], draw_ctx, ctx);
+    draw_uv_index(right_text_rect, draw_ctx, ctx);
   } else {
     static GRect bluetooth_rect;
     bluetooth_rect = GRect(cols[2].origin.x + cols[2].size.w - 14, cols[2].origin.y, 14, 14);
