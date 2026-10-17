@@ -47,6 +47,11 @@ If you enjoy the original watch face, consider buying its author a hot beverage.
 
 The changes were implemented with the help of Claude (Anthropic) as a coding assistant.
 
+## Data sources
+
+- Weather data by [Open-Meteo.com](https://open-meteo.com/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+- Location names by [BigDataCloud](https://www.bigdatacloud.com/)
+
 ## Building & running
 
 Running the `pebble` commands requires the Pebble SDK. See the [repebble SDK setup guide](https://developer.repebble.com/sdk/) for installation instructions.
