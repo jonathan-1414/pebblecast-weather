@@ -58,6 +58,17 @@ static void draw_steps_icon(GRect rect, GContext *ctx) {
   graphics_fill_rect(ctx, GRect(x + 6, y + 7, 4, 2), 0, GCornerNone);
 }
 
+// crescent moon for quiet time: a filled circle with an offset circle cut out
+static void draw_quiet_time_icon(GRect rect, GColor color, GContext *ctx) {
+  const AppTheme *theme = app_theme_current();
+  int cx = rect.origin.x + 7;
+  int cy = rect.origin.y + 7;
+  graphics_context_set_fill_color(ctx, color);
+  graphics_fill_circle(ctx, GPoint(cx, cy), 6);
+  graphics_context_set_fill_color(ctx, theme->background);
+  graphics_fill_circle(ctx, GPoint(cx + 4, cy - 3), 5);
+}
+
 // one info line, vertically centered in its row
 static GRect info_line_rect(GRect rect) {
   return GRect(rect.origin.x, rect.origin.y + (rect.size.h - INFO_LINE_HEIGHT) / 2, rect.size.w, INFO_LINE_HEIGHT);
@@ -144,13 +155,18 @@ static void watchface_full_draw_top_row(GRect rect, const WatchfaceDrawContext *
   left_text_rect = GRect(cols[0].origin.x, cols[0].origin.y + CORNER_TEXT_OFFSET, cols[0].size.w, cols[0].size.h);
   right_text_rect = GRect(cols[2].origin.x, cols[2].origin.y + CORNER_TEXT_OFFSET, cols[2].size.w, cols[2].size.h);
 
-  // battery as percentage
-  static char battery_buf[8];
-  snprintf(battery_buf, sizeof(battery_buf), "%d%%", draw_ctx->battery_charge_percent);
-  graphics_context_set_text_color(ctx, draw_ctx->battery_charge_percent <= 20 ? theme->battery_low
-                                                                                 : theme->primary_text);
-  graphics_draw_text(ctx, battery_buf, draw_ctx->plot_font, left_text_rect, GTextOverflowModeTrailingEllipsis,
-                     GTextAlignmentLeft, NULL);
+  // the corner shows the battery percentage, or a moon while quiet time is on
+  bool battery_low = draw_ctx->battery_charge_percent <= 20;
+  if (draw_ctx->quiet_time_active) {
+    draw_quiet_time_icon(GRect(left_text_rect.origin.x, left_text_rect.origin.y, 14, 14),
+                         battery_low ? theme->battery_low : theme->primary_text, ctx);
+  } else {
+    static char battery_buf[8];
+    snprintf(battery_buf, sizeof(battery_buf), "%d%%", draw_ctx->battery_charge_percent);
+    graphics_context_set_text_color(ctx, battery_low ? theme->battery_low : theme->primary_text);
+    graphics_draw_text(ctx, battery_buf, draw_ctx->plot_font, left_text_rect, GTextOverflowModeTrailingEllipsis,
+                       GTextAlignmentLeft, NULL);
+  }
 
   // draw date centered across the whole row, not just the middle column
   watchface_draw_date(rect, draw_ctx, draw_ctx->date_font, GTextAlignmentCenter, ctx);
@@ -203,7 +219,7 @@ void watchface_full_draw(GRect bounds, const WatchfaceDrawContext *draw_ctx, GCo
   summary_rect = rows[4];
   weather_rect = rows[5];
 
-  // top row for battery percentage, date, UV index or bluetooth
+  // top row for battery percentage or quiet time, date, UV index or bluetooth
   watchface_full_draw_top_row(top_row_rect, draw_ctx, ctx);
 
   // steps, next sun event and elevation

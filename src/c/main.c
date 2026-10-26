@@ -209,6 +209,8 @@ static void draw_watchface(struct Layer *layer, GContext *ctx) {
   draw_ctx.plot_font = s_plot_font;
   draw_ctx.battery_charge_percent = battery_charge_percent;
   draw_ctx.bluetooth_connected = bluetooth_connected;
+  // there is no event for quiet time, so it is read on each redraw (every minute tick)
+  draw_ctx.quiet_time_active = quiet_time_is_active();
   draw_ctx.tick_time = tick_time;
   draw_ctx.weather_data =
       WeatherData(temps_count, temps, hours, weather_codes, city_name, today_temp_max, today_temp_min);

@@ -8,6 +8,8 @@ typedef struct {
   GFont plot_font;
   uint8_t battery_charge_percent;
   bool bluetooth_connected;
+  // quiet time is on (checked on every redraw, i.e. at least once a minute)
+  bool quiet_time_active;
   struct tm *tick_time;
   WeatherData weather_data;
   int8_t tomorrow_temp_max;
