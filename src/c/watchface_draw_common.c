@@ -31,10 +31,14 @@ void watchface_draw_disconnected(GRect rect, GContext *ctx) {
   const int x = rect.origin.x;
   const int y = rect.origin.y;
 
+  // inverted icon: filled square in text colour, phone and strike cut out in background colour
+  graphics_context_set_fill_color(ctx, theme->primary_text);
+  graphics_fill_rect(ctx, GRect(x, y, 14, 14), 0, GCornerNone);
+
   graphics_context_set_stroke_width(ctx, 1);
 
   // phone: 8x13 outline with cut corners, speaker and home button
-  graphics_context_set_stroke_color(ctx, theme->battery_low);
+  graphics_context_set_stroke_color(ctx, theme->background);
   graphics_draw_line(ctx, GPoint(x + 4, y), GPoint(x + 9, y));
   graphics_draw_line(ctx, GPoint(x + 4, y + 12), GPoint(x + 9, y + 12));
   graphics_draw_line(ctx, GPoint(x + 3, y + 1), GPoint(x + 3, y + 11));
@@ -42,13 +46,13 @@ void watchface_draw_disconnected(GRect rect, GContext *ctx) {
   graphics_draw_line(ctx, GPoint(x + 6, y + 2), GPoint(x + 7, y + 2));
   graphics_draw_line(ctx, GPoint(x + 6, y + 11), GPoint(x + 7, y + 11));
 
-  // gap in background colour so the strike stays separate from the phone outline
-  graphics_context_set_stroke_color(ctx, theme->background);
+  // gap in square colour so the strike stays separate from the phone outline
+  graphics_context_set_stroke_color(ctx, theme->primary_text);
   graphics_draw_line(ctx, GPoint(x, y + 1), GPoint(x + 12, y + 13));
   graphics_draw_line(ctx, GPoint(x + 2, y), GPoint(x + 13, y + 11));
 
   // 2 px strike through
-  graphics_context_set_stroke_color(ctx, theme->battery_low);
+  graphics_context_set_stroke_color(ctx, theme->background);
   graphics_draw_line(ctx, GPoint(x, y), GPoint(x + 13, y + 13));
   graphics_draw_line(ctx, GPoint(x + 1, y), GPoint(x + 13, y + 12));
 }
