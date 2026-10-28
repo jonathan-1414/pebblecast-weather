@@ -176,7 +176,7 @@ static void watchface_full_draw_top_row(GRect rect, const WatchfaceDrawContext *
     draw_uv_index(right_text_rect, draw_ctx, ctx);
   } else {
     static GRect disconnected_rect;
-    disconnected_rect = GRect(cols[2].origin.x + cols[2].size.w - 14, cols[2].origin.y, 14, 14);
+    disconnected_rect = GRect(cols[2].origin.x + cols[2].size.w - 14, cols[2].origin.y + 2, 14, 14);
     watchface_draw_disconnected(disconnected_rect, ctx);
   }
 }
