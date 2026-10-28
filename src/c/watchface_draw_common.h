@@ -28,4 +28,4 @@ void watchface_draw_date(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont
                          GContext *ctx);
 void watchface_draw_time(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont font, int y_offset,
                          GTextAlignment alignment, GContext *ctx);
-void watchface_draw_bt_strike_through(GRect rect, GContext *ctx);
+void watchface_draw_disconnected(GRect rect, GContext *ctx);

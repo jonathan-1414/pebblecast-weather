@@ -26,30 +26,29 @@ void watchface_draw_time(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont
   graphics_draw_text(ctx, time_buffer, font, rect, GTextOverflowModeTrailingEllipsis, alignment, NULL);
 }
 
-void watchface_draw_bt_strike_through(GRect rect, GContext *ctx) {
+void watchface_draw_disconnected(GRect rect, GContext *ctx) {
   const AppTheme *theme = app_theme_current();
-  static int x;
-  static int y;
-  static int half_h;
-  static int half_w;
-  x = rect.origin.x + rect.size.w / 2;
-  y = rect.origin.y + rect.size.h / 2;
-  half_h = rect.size.h / 2;
-  half_w = rect.size.w / 2;
+  const int x = rect.origin.x;
+  const int y = rect.origin.y;
 
-  graphics_context_set_stroke_color(ctx, theme->primary_text);
   graphics_context_set_stroke_width(ctx, 1);
 
-  graphics_draw_line(ctx, GPoint(x, y - half_h), GPoint(x, y + half_h));
-  graphics_draw_line(ctx, GPoint(x, y - half_h), GPoint(x + half_w, y - half_h / 2));
-  graphics_draw_line(ctx, GPoint(x + half_w, y - half_h / 2), GPoint(x, y));
-  graphics_draw_line(ctx, GPoint(x, y), GPoint(x + half_w, y + half_h / 2));
-  graphics_draw_line(ctx, GPoint(x + half_w, y + half_h / 2), GPoint(x, y + half_h));
-  graphics_draw_line(ctx, GPoint(x - half_w, y - half_h / 2), GPoint(x + half_w, y + half_h / 2));
-  graphics_draw_line(ctx, GPoint(x - half_w, y + half_h / 2), GPoint(x + half_w, y - half_h / 2));
+  // phone: 8x13 outline with cut corners, speaker and home button
+  graphics_context_set_stroke_color(ctx, theme->battery_low);
+  graphics_draw_line(ctx, GPoint(x + 4, y), GPoint(x + 9, y));
+  graphics_draw_line(ctx, GPoint(x + 4, y + 12), GPoint(x + 9, y + 12));
+  graphics_draw_line(ctx, GPoint(x + 3, y + 1), GPoint(x + 3, y + 11));
+  graphics_draw_line(ctx, GPoint(x + 10, y + 1), GPoint(x + 10, y + 11));
+  graphics_draw_line(ctx, GPoint(x + 6, y + 2), GPoint(x + 7, y + 2));
+  graphics_draw_line(ctx, GPoint(x + 6, y + 11), GPoint(x + 7, y + 11));
 
-  // strike through
-  graphics_context_set_stroke_width(ctx, 2);
-  graphics_draw_line(ctx, GPoint(rect.origin.x, rect.origin.y),
-                     GPoint(rect.origin.x + rect.size.w - 1, rect.origin.y + rect.size.h - 1));
+  // gap in background colour so the strike stays separate from the phone outline
+  graphics_context_set_stroke_color(ctx, theme->background);
+  graphics_draw_line(ctx, GPoint(x, y + 1), GPoint(x + 12, y + 13));
+  graphics_draw_line(ctx, GPoint(x + 2, y), GPoint(x + 13, y + 11));
+
+  // 2 px strike through
+  graphics_context_set_stroke_color(ctx, theme->battery_low);
+  graphics_draw_line(ctx, GPoint(x, y), GPoint(x + 13, y + 13));
+  graphics_draw_line(ctx, GPoint(x + 1, y), GPoint(x + 13, y + 12));
 }

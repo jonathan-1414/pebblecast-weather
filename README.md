@@ -21,7 +21,7 @@ If you enjoy the original watch face, consider buying its author a hot beverage.
 
 - Light and dark themes
 - Celsius and Fahrenheit support
-- Battery level in percent, date, and the UV index (today's maximum) in the top row; a Bluetooth icon replaces the UV index while the phone is disconnected
+- Battery level in percent, date, and the UV index (today's maximum) in the top row; a crossed-out phone icon replaces the UV index while the phone is disconnected
 - A moon icon replaces the battery level while Quiet Time is on (drawn in the warning color when the battery is at 20 % or below)
 - Today's steps, the next sunrise or sunset, and the elevation of the current location above the time
 - Short summary of tomorrow's weather (`Morgen: Nebel, 10°`)
@@ -36,7 +36,7 @@ If you enjoy the original watch face, consider buying its author a hot beverage.
 - Redesigned top section:
   - Battery level in percent instead of a battery graphic
   - Larger date (21 px)
-  - UV index in the top-right corner, replaced by the Bluetooth icon while disconnected
+  - UV index in the top-right corner, replaced by a crossed-out phone icon while disconnected
   - Moon icon in the top-left corner instead of the battery level while Quiet Time is on
   - New info row with today's steps, the next sun event (sunrise or sunset) and the elevation
   - Larger time (52 px), with a space instead of the colon between hours and minutes

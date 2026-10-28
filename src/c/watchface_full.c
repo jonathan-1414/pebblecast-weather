@@ -171,13 +171,13 @@ static void watchface_full_draw_top_row(GRect rect, const WatchfaceDrawContext *
   // draw date centered across the whole row, not just the middle column
   watchface_draw_date(rect, draw_ctx, draw_ctx->date_font, GTextAlignmentCenter, ctx);
 
-  // the corner shows the UV index, or the bluetooth icon while disconnected
+  // the corner shows the UV index, or the disconnected icon while the phone is unreachable
   if (draw_ctx->bluetooth_connected) {
     draw_uv_index(right_text_rect, draw_ctx, ctx);
   } else {
-    static GRect bluetooth_rect;
-    bluetooth_rect = GRect(cols[2].origin.x + cols[2].size.w - 14, cols[2].origin.y, 14, 14);
-    watchface_draw_bt_strike_through(bluetooth_rect, ctx);
+    static GRect disconnected_rect;
+    disconnected_rect = GRect(cols[2].origin.x + cols[2].size.w - 14, cols[2].origin.y, 14, 14);
+    watchface_draw_disconnected(disconnected_rect, ctx);
   }
 }
 
