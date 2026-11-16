@@ -153,7 +153,9 @@ void draw_weather(GRect rect, WeatherData data, GFont font, GContext *ctx) {
     return;
 
   // padding of 10 px, except for a smaller gap between the divider line and the top row
-  LayoutBox weather_box = LayoutBox(GRect(rect.origin.x, rect.origin.y - 6, rect.size.w, rect.size.h + 6), 10);
+  // and 4 px less at the bottom, so the plot keeps its height although the rows above
+  // it grew by 4 px
+  LayoutBox weather_box = LayoutBox(GRect(rect.origin.x, rect.origin.y - 6, rect.size.w, rect.size.h + 10), 10);
   // 1st row: top row for min/max values
   // 2nd row: serves as a spacer to make room for the temperature label that is above the temperature point
   // 3rd row: temp plot

@@ -6,6 +6,8 @@ typedef struct {
   GFont time_font;
   GFont date_font;
   GFont plot_font;
+  // battery, UV index, steps, sun event and elevation
+  GFont info_font;
   uint8_t battery_charge_percent;
   bool bluetooth_connected;
   // quiet time is on (checked on every redraw, i.e. at least once a minute)

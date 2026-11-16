@@ -10,6 +10,7 @@ static Layer *window_layer;
 static GFont s_time_font;
 static GFont s_date_font;
 static GFont s_plot_font;
+static GFont s_info_font;
 
 static uint8_t battery_charge_percent;
 static bool bluetooth_connected;
@@ -207,6 +208,7 @@ static void draw_watchface(struct Layer *layer, GContext *ctx) {
   draw_ctx.time_font = s_time_font;
   draw_ctx.date_font = s_date_font;
   draw_ctx.plot_font = s_plot_font;
+  draw_ctx.info_font = s_info_font;
   draw_ctx.battery_charge_percent = battery_charge_percent;
   draw_ctx.bluetooth_connected = bluetooth_connected;
   // there is no event for quiet time, so it is read on each redraw (every minute tick)
@@ -233,6 +235,7 @@ static void prv_window_load(Window *window) {
   s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_RIGHTEOUS_TIME_52));
   s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_RIGHTEOUS_DATE_21));
   s_plot_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_RIGHTEOUS_WEATHER_12));
+  s_info_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_RIGHTEOUS_INFO_14));
 
   layer_set_update_proc(window_layer, draw_watchface);
 
@@ -282,6 +285,7 @@ static void prv_window_unload(Window *window) {
   fonts_unload_custom_font(s_time_font);
   fonts_unload_custom_font(s_date_font);
   fonts_unload_custom_font(s_plot_font);
+  fonts_unload_custom_font(s_info_font);
 }
 
 static void prv_init(void) {

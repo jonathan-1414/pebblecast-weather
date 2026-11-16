@@ -2,7 +2,7 @@
 #include "layout.h"
 #include "theme.h"
 
-#define INFO_LINE_HEIGHT 15
+#define INFO_LINE_HEIGHT 17
 #define INFO_ICON_WIDTH 11
 // moves battery and UV down so their tops line up with the date
 #define CORNER_TEXT_OFFSET 2
@@ -36,7 +36,7 @@ static void draw_sun_icon(GRect rect, bool rise, GContext *ctx) {
 static void draw_mountain_icon(GRect rect, GContext *ctx) {
   const AppTheme *theme = app_theme_current();
   int x = rect.origin.x;
-  int base_y = rect.origin.y + 12;
+  int base_y = rect.origin.y + 11;  // base on the text's bottom row
   graphics_context_set_stroke_color(ctx, theme->primary_text);
   graphics_context_set_stroke_width(ctx, 1);
   graphics_draw_line(ctx, GPoint(x, base_y), GPoint(x + 4, base_y - 7));
@@ -50,7 +50,7 @@ static void draw_mountain_icon(GRect rect, GContext *ctx) {
 static void draw_steps_icon(GRect rect, GContext *ctx) {
   const AppTheme *theme = app_theme_current();
   int x = rect.origin.x;
-  int y = rect.origin.y + 3;
+  int y = rect.origin.y;  // soles end on the text's bottom row
   graphics_context_set_fill_color(ctx, theme->primary_text);
   graphics_fill_rect(ctx, GRect(x, y + 3, 4, 6), 1, GCornersAll);
   graphics_fill_rect(ctx, GRect(x, y + 10, 4, 2), 0, GCornerNone);
@@ -97,13 +97,13 @@ static void draw_next_sun_event(GRect rect, const WatchfaceDrawContext *draw_ctx
   const char *text = rise ? draw_ctx->sunrise_time : draw_ctx->sunset_time;
   GRect line = info_line_rect(rect);
   // center icon and text together across the row
-  GSize text_size = graphics_text_layout_get_content_size(text, draw_ctx->plot_font, info_text_rect(line),
+  GSize text_size = graphics_text_layout_get_content_size(text, draw_ctx->info_font, info_text_rect(line),
                                                           GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft);
   int width = INFO_ICON_WIDTH + text_size.w;
   GRect centered = GRect(line.origin.x + (line.size.w - width) / 2, line.origin.y, width, line.size.h);
   // move the icon up so its horizon line sits on the text's bottom row
   draw_sun_icon(GRect(centered.origin.x, centered.origin.y - 3, centered.size.w, centered.size.h), rise, ctx);
-  draw_text_line(text, info_text_rect(centered), draw_ctx->plot_font, GTextAlignmentLeft, ctx);
+  draw_text_line(text, info_text_rect(centered), draw_ctx->info_font, GTextAlignmentLeft, ctx);
 }
 
 static void draw_uv_index(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
@@ -112,7 +112,7 @@ static void draw_uv_index(GRect rect, const WatchfaceDrawContext *draw_ctx, GCon
   }
   static char uv_buf[12];
   snprintf(uv_buf, sizeof(uv_buf), "UV %d", draw_ctx->uv_index);
-  draw_text_line(uv_buf, rect, draw_ctx->plot_font, GTextAlignmentRight, ctx);
+  draw_text_line(uv_buf, rect, draw_ctx->info_font, GTextAlignmentRight, ctx);
 }
 
 static void draw_steps(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
@@ -123,7 +123,7 @@ static void draw_steps(GRect rect, const WatchfaceDrawContext *draw_ctx, GContex
   snprintf(steps_buf, sizeof(steps_buf), "%ld", (long)draw_ctx->steps);
   GRect line = info_line_rect(rect);
   draw_steps_icon(line, ctx);
-  draw_text_line(steps_buf, info_text_rect(line), draw_ctx->plot_font, GTextAlignmentLeft, ctx);
+  draw_text_line(steps_buf, info_text_rect(line), draw_ctx->info_font, GTextAlignmentLeft, ctx);
 }
 
 static void draw_elevation(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
@@ -134,9 +134,9 @@ static void draw_elevation(GRect rect, const WatchfaceDrawContext *draw_ctx, GCo
   snprintf(elevation_buf, sizeof(elevation_buf), "%d", draw_ctx->elevation);
   GRect line = info_line_rect(rect);
   GRect text_rect = info_text_rect(line);
-  draw_text_line(elevation_buf, text_rect, draw_ctx->plot_font, GTextAlignmentRight, ctx);
+  draw_text_line(elevation_buf, text_rect, draw_ctx->info_font, GTextAlignmentRight, ctx);
   // the icon sits directly left of the right-aligned text
-  GSize text_size = graphics_text_layout_get_content_size(elevation_buf, draw_ctx->plot_font, text_rect,
+  GSize text_size = graphics_text_layout_get_content_size(elevation_buf, draw_ctx->info_font, text_rect,
                                                           GTextOverflowModeTrailingEllipsis, GTextAlignmentRight);
   draw_mountain_icon(GRect(line.origin.x + line.size.w - text_size.w - INFO_ICON_WIDTH, line.origin.y,
                            INFO_ICON_WIDTH, line.size.h),
@@ -164,7 +164,7 @@ static void watchface_full_draw_top_row(GRect rect, const WatchfaceDrawContext *
     static char battery_buf[8];
     snprintf(battery_buf, sizeof(battery_buf), "%d%%", draw_ctx->battery_charge_percent);
     graphics_context_set_text_color(ctx, battery_low ? theme->battery_low : theme->primary_text);
-    graphics_draw_text(ctx, battery_buf, draw_ctx->plot_font, left_text_rect, GTextOverflowModeTrailingEllipsis,
+    graphics_draw_text(ctx, battery_buf, draw_ctx->info_font, left_text_rect, GTextOverflowModeTrailingEllipsis,
                        GTextAlignmentLeft, NULL);
   }
 
@@ -190,7 +190,7 @@ static void watchface_full_draw_time_row(GRect rect, const WatchfaceDrawContext 
 static void watchface_full_draw_info_row(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
   static LayoutBox info_row;
   info_row = LayoutBox(rect, 0);
-  static EntryConfig col_configs[] = {{52}, {0}, {52}};
+  static EntryConfig col_configs[] = {{64}, {0}, {64}};
   static GRect cols[3];
   split_into_columns(info_row, col_configs, cols, 3);
 
@@ -203,10 +203,12 @@ void watchface_full_draw(GRect bounds, const WatchfaceDrawContext *draw_ctx, GCo
   const AppTheme *theme = app_theme_current();
   static LayoutBox root;
   root = LayoutBox(bounds, 2);
-  // row heights leave about 6 px below the date and 10 px around the time;
-  // the 4th row is an empty gap, so the summary sits directly above the divider
+  // row heights leave about 8 px below the date and 10 px around the time;
+  // the 4th row is an empty gap, so the summary sits directly above the divider.
+  // The top two rows are 2 px taller each, which pushes everything from the
+  // time on down by 4 px (draw_weather extends the plot into the bottom padding).
   static GRect rows[6];
-  static EntryConfig row_configs[] = {{28}, {15}, {44}, {4}, {25}, {0}};
+  static EntryConfig row_configs[] = {{30}, {17}, {44}, {4}, {25}, {0}};
   split_into_rows(root, row_configs, rows, 6);
   static GRect top_row_rect;
   static GRect time_rect;
