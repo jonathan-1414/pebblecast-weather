@@ -43,31 +43,21 @@ void watchface_draw_time(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont
 
 void watchface_draw_disconnected(GRect rect, GContext *ctx) {
   const AppTheme *theme = app_theme_current();
+  // Bluetooth logo: a filled badge in the warning colour with the rune cut out in the
+  // background colour; a plain rune in the warning colour is too thin to see on the watch
   const int x = rect.origin.x;
   const int y = rect.origin.y;
+  graphics_context_set_fill_color(ctx, theme->battery_low);
+  graphics_fill_rect(ctx, GRect(x + 2, y - 1, 11, 16), 5, GCornersAll);
 
-  // inverted icon: filled square in text colour, phone and strike cut out in background colour
-  graphics_context_set_fill_color(ctx, theme->primary_text);
-  graphics_fill_rect(ctx, GRect(x, y, 14, 14), 0, GCornerNone);
-
+  const int cx = x + 7;
+  const int top = y + 2;
+  const int bottom = y + 12;
+  graphics_context_set_stroke_color(ctx, theme->background);
   graphics_context_set_stroke_width(ctx, 1);
-
-  // phone: 8x13 outline with cut corners, speaker and home button
-  graphics_context_set_stroke_color(ctx, theme->background);
-  graphics_draw_line(ctx, GPoint(x + 4, y), GPoint(x + 9, y));
-  graphics_draw_line(ctx, GPoint(x + 4, y + 12), GPoint(x + 9, y + 12));
-  graphics_draw_line(ctx, GPoint(x + 3, y + 1), GPoint(x + 3, y + 11));
-  graphics_draw_line(ctx, GPoint(x + 10, y + 1), GPoint(x + 10, y + 11));
-  graphics_draw_line(ctx, GPoint(x + 6, y + 2), GPoint(x + 7, y + 2));
-  graphics_draw_line(ctx, GPoint(x + 6, y + 11), GPoint(x + 7, y + 11));
-
-  // gap in square colour so the strike stays separate from the phone outline
-  graphics_context_set_stroke_color(ctx, theme->primary_text);
-  graphics_draw_line(ctx, GPoint(x, y + 1), GPoint(x + 12, y + 13));
-  graphics_draw_line(ctx, GPoint(x + 2, y), GPoint(x + 13, y + 11));
-
-  // 2 px strike through
-  graphics_context_set_stroke_color(ctx, theme->background);
-  graphics_draw_line(ctx, GPoint(x, y), GPoint(x + 13, y + 13));
-  graphics_draw_line(ctx, GPoint(x + 1, y), GPoint(x + 13, y + 12));
+  graphics_draw_line(ctx, GPoint(cx, top), GPoint(cx, bottom));
+  graphics_draw_line(ctx, GPoint(cx, top), GPoint(cx + 3, top + 2));
+  graphics_draw_line(ctx, GPoint(cx + 3, top + 2), GPoint(cx - 3, bottom - 2));
+  graphics_draw_line(ctx, GPoint(cx, bottom), GPoint(cx + 3, bottom - 2));
+  graphics_draw_line(ctx, GPoint(cx + 3, bottom - 2), GPoint(cx - 3, top + 2));
 }
