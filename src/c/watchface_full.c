@@ -184,7 +184,7 @@ static void watchface_full_draw_top_row(GRect rect, const WatchfaceDrawContext *
 static void watchface_full_draw_time_row(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {
   // the row is lower than the font's line height, which would stop the time from being drawn
   watchface_draw_time(GRect(rect.origin.x, rect.origin.y, rect.size.w, TIME_TEXT_HEIGHT), draw_ctx,
-                      draw_ctx->time_font, -9, GTextAlignmentCenter, ctx);
+                      draw_ctx->time_font, -9, ctx);
 }
 
 static void watchface_full_draw_info_row(GRect rect, const WatchfaceDrawContext *draw_ctx, GContext *ctx) {

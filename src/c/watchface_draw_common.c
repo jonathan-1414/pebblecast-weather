@@ -13,17 +13,32 @@ void watchface_draw_date(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont
   graphics_draw_text(ctx, date_buffer, font, rect, GTextOverflowModeTrailingEllipsis, alignment, NULL);
 }
 
-void watchface_draw_time(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont font, int y_offset,
-                         GTextAlignment alignment, GContext *ctx) {
+// each digit sits centered in its own box, so the time does not shift when a digit changes
+#define TIME_DIGIT_WIDTH 32
+#define TIME_DIGIT_GAP 14
+
+void watchface_draw_time(GRect rect, const WatchfaceDrawContext *draw_ctx, GFont font, int y_offset, GContext *ctx) {
   const AppTheme *theme = app_theme_current();
-  static char time_buffer[12];
-  strftime(time_buffer, sizeof(time_buffer), clock_is_24h_style() ? "%H %M" : "%I %M", draw_ctx->tick_time);
+  static char time_buffer[8];
+  strftime(time_buffer, sizeof(time_buffer), clock_is_24h_style() ? "%H%M" : "%I%M", draw_ctx->tick_time);
 
   // Custom fonts need a small vertical adjustment to align visually within their row.
   rect.origin.y += y_offset;
 
   graphics_context_set_text_color(ctx, theme->primary_text);
-  graphics_draw_text(ctx, time_buffer, font, rect, GTextOverflowModeTrailingEllipsis, alignment, NULL);
+  const int total_width = 4 * TIME_DIGIT_WIDTH + TIME_DIGIT_GAP;
+  int x = rect.origin.x + (rect.size.w - total_width) / 2;
+  for (int i = 0; i < 4; i++) {
+    if (i == 2) {
+      x += TIME_DIGIT_GAP;
+    }
+    char digit[2] = {time_buffer[i], '\0'};
+    // the text rect is wider than the box, because the widest digits are slightly wider
+    // than TIME_DIGIT_WIDTH and would otherwise be cut off
+    GRect digit_rect = GRect(x - 10, rect.origin.y, TIME_DIGIT_WIDTH + 20, rect.size.h);
+    graphics_draw_text(ctx, digit, font, digit_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+    x += TIME_DIGIT_WIDTH;
+  }
 }
 
 void watchface_draw_disconnected(GRect rect, GContext *ctx) {
